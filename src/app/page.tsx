@@ -11,7 +11,7 @@ import type { ResumeData } from '@/lib/types';
 import { initialData } from '@/lib/initial-data';
 import ResumeForm from '@/components/resume/ResumeForm';
 import { Button } from '@/components/ui/button';
-import { Download, Loader2, Palette } from 'lucide-react';
+import { Download, Loader2, Palette, Sparkles } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -27,6 +27,9 @@ import ExecutiveTemplate from '@/components/resume/templates/ExecutiveTemplate';
 import TwoColumnTemplate from '@/components/resume/templates/TwoColumnTemplate';
 import ColorPicker from '@/components/ColorPicker';
 import { useTheme } from '@/components/theme-provider';
+import { tailorResume } from '@/ai/flows/tailor-resume-flow';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 const resumeSchema = z.object({
   personalInfo: z.object({
@@ -71,11 +74,61 @@ export default function Home() {
   const previewRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const { theme } = useTheme();
+  const [jobRole, setJobRole] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const { toast } = useToast();
 
   const form = useForm<ResumeData>({
     resolver: zodResolver(resumeSchema),
     defaultValues: initialData,
   });
+
+  const handleAiGeneration = async () => {
+    if (!jobRole) {
+        toast({
+            variant: "destructive",
+            title: "Job Role Required",
+            description: "Please enter a job role to generate tailored content.",
+        });
+        return;
+    }
+    setIsGenerating(true);
+    try {
+        const result = await tailorResume({ jobRole });
+        form.setValue('summary', result.summary);
+        form.setValue('skills', result.skills);
+        
+        // Update the first experience description or add a new one if none exist
+        const currentExperience = form.getValues('experience');
+        const newDescription = result.experienceBullets.map(b => `- ${b}`).join('\n');
+        if(currentExperience.length > 0) {
+            form.setValue('experience.0.description', newDescription);
+        } else {
+            form.setValue('experience', [{
+                id: 'exp1',
+                jobTitle: jobRole,
+                company: '',
+                location: '',
+                startDate: '',
+                endDate: '',
+                description: newDescription
+            }]);
+        }
+        toast({
+            title: "Resume Tailored!",
+            description: `Your resume has been updated for a ${jobRole} role.`,
+        });
+
+    } catch (error) {
+        console.error("AI generation failed:", error);
+        toast({
+            variant: "destructive",
+            title: "AI Generation Failed",
+            description: "Could not generate content. Please try again.",
+        });
+    }
+    setIsGenerating(false);
+  };
 
   const handleDownloadPdf = async () => {
     const element = previewRef.current;
@@ -155,6 +208,32 @@ export default function Home() {
             <h1 className="font-headline text-4xl font-bold text-primary">Resume Architect by Chirag</h1>
             <p className="text-muted-foreground mt-2">Fill in your details to build your professional resume.</p>
           </header>
+            <div className="p-4 border rounded-lg mb-6 bg-secondary/50">
+                <Label htmlFor='ai-job-role' className="text-base font-semibold flex items-center gap-2 mb-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    AI Resume Tailoring
+                </Label>
+                <p className="text-sm text-muted-foreground mb-3">
+                    Enter your target job role, and let AI generate a tailored summary, skills, and experience points for you.
+                </p>
+                <div className="flex gap-2">
+                    <Input 
+                        id="ai-job-role"
+                        placeholder="e.g., 'Senior Software Engineer'"
+                        value={jobRole}
+                        onChange={(e) => setJobRole(e.target.value)}
+                        disabled={isGenerating}
+                    />
+                    <Button onClick={handleAiGeneration} disabled={isGenerating}>
+                        {isGenerating ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                           <Sparkles className="mr-2 h-4 w-4" />
+                        )}
+                        Generate
+                    </Button>
+                </div>
+            </div>
           <ResumeForm form={form} setResumeData={setResumeData} />
         </div>
       </ScrollArea>
