@@ -18,6 +18,13 @@ import { Label } from '@/components/ui/label';
 import ClassicTemplate from '@/components/resume/templates/ClassicTemplate';
 import ModernTemplate from '@/components/resume/templates/ModernTemplate';
 import CompactTemplate from '@/components/resume/templates/CompactTemplate';
+import CreativeTemplate from '@/components/resume/templates/CreativeTemplate';
+import TechnicalTemplate from '@/components/resume/templates/TechnicalTemplate';
+import MinimalistTemplate from '@/components/resume/templates/MinimalistTemplate';
+import ProfessionalTemplate from '@/components/resume/templates/ProfessionalTemplate';
+import AcademicTemplate from '@/components/resume/templates/AcademicTemplate';
+import ExecutiveTemplate from '@/components/resume/templates/ExecutiveTemplate';
+import TwoColumnTemplate from '@/components/resume/templates/TwoColumnTemplate';
 import ColorPicker from '@/components/ColorPicker';
 import { useTheme } from '@/components/theme-provider';
 
@@ -56,7 +63,7 @@ const resumeSchema = z.object({
   })),
 });
 
-type TemplateKey = 'classic' | 'modern' | 'compact';
+type TemplateKey = 'classic' | 'modern' | 'compact' | 'creative' | 'technical' | 'minimalist' | 'professional' | 'academic' | 'executive' | 'two-column';
 
 export default function Home() {
   const [resumeData, setResumeData] = useState<ResumeData>(initialData);
@@ -129,6 +136,13 @@ export default function Home() {
     classic: ClassicTemplate,
     modern: ModernTemplate,
     compact: CompactTemplate,
+    creative: CreativeTemplate,
+    technical: TechnicalTemplate,
+    minimalist: MinimalistTemplate,
+    professional: ProfessionalTemplate,
+    academic: AcademicTemplate,
+    executive: ExecutiveTemplate,
+    'two-column': TwoColumnTemplate,
   };
 
   const SelectedResume = templates[selectedTemplate];
@@ -146,14 +160,17 @@ export default function Home() {
       </ScrollArea>
 
       <div className="bg-muted/50 p-4 md:p-8 flex flex-col items-center justify-start lg:h-screen">
-        <div className="w-full flex justify-between items-center mb-4 sticky top-4 z-10 gap-4">
-            <div className="flex gap-2">
-                <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border flex items-center gap-2">
-                    <Palette className="h-4 w-4 text-muted-foreground" />
-                    <ColorPicker />
+        <div className="w-full flex justify-between items-start mb-4 sticky top-4 z-10 gap-4">
+            <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                    <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border flex items-center gap-2">
+                        <Palette className="h-4 w-4 text-muted-foreground" />
+                        <ColorPicker />
+                    </div>
                 </div>
                 <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border">
-                    <RadioGroup defaultValue="classic" onValueChange={(value: string) => setSelectedTemplate(value as TemplateKey)} className="flex items-center gap-4">
+                    <RadioGroup defaultValue="classic" onValueChange={(value: string) => setSelectedTemplate(value as TemplateKey)} className="flex items-center flex-wrap gap-x-4 gap-y-2">
+                        <Label>Templates:</Label>
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="classic" id="t-classic" />
                             <Label htmlFor="t-classic">Classic</Label>
@@ -165,6 +182,34 @@ export default function Home() {
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="compact" id="t-compact" />
                             <Label htmlFor="t-compact">Compact</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="creative" id="t-creative" />
+                            <Label htmlFor="t-creative">Creative</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="technical" id="t-technical" />
+                            <Label htmlFor="t-technical">Technical</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="minimalist" id="t-minimalist" />
+                            <Label htmlFor="t-minimalist">Minimalist</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="professional" id="t-professional" />
+                            <Label htmlFor="t-professional">Professional</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="academic" id="t-academic" />
+                            <Label htmlFor="t-academic">Academic</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="executive" id="t-executive" />
+                            <Label htmlFor="t-executive">Executive</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="two-column" id="t-two-column" />
+                            <Label htmlFor="t-two-column">Two Column</Label>
                         </div>
                     </RadioGroup>
                 </div>
