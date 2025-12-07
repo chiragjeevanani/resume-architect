@@ -154,53 +154,115 @@ export default function Home() {
     
     setIsDownloading(true);
 
-    // Temporarily set theme to light for PDF generation for consistency
-    const originalTheme = document.documentElement.getAttribute('data-theme');
-    document.documentElement.setAttribute('data-theme', 'default');
-    await new Promise(resolve => setTimeout(resolve, 100));
+    try {
+      // Temporarily set theme to light for PDF generation for consistency
+      const originalTheme = document.documentElement.getAttribute('data-theme');
+      document.documentElement.setAttribute('data-theme', 'default');
+      
+      // Wait for theme change and fonts to load
+      await new Promise(resolve => setTimeout(resolve, 300));
 
+      // Scroll to top to ensure we capture the full resume
+      window.scrollTo(0, 0);
+      await new Promise(resolve => setTimeout(resolve, 100));
 
-    const canvas = await html2canvas(element, {
-      scale: 3, 
-      useCORS: true, 
-      logging: false,
-      backgroundColor: null,
-    });
+      const canvas = await html2canvas(element, {
+        scale: 2, // Reduced from 3 for better performance while maintaining quality
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        backgroundColor: '#ffffff', // White background
+        width: element.scrollWidth,
+        height: element.scrollHeight,
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight,
+        onclone: (clonedDoc) => {
+          // Ensure fonts are loaded in cloned document
+          const clonedElement = clonedDoc.querySelector('[data-theme]');
+          if (clonedElement) {
+            clonedElement.setAttribute('data-theme', 'default');
+          }
+        },
+      });
 
-    if(originalTheme) {
+      // Restore original theme
+      if(originalTheme) {
         document.documentElement.setAttribute('data-theme', originalTheme);
-    } else {
+      } else {
         document.documentElement.removeAttribute('data-theme');
-    }
-
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
-    const ratio = canvasWidth / canvasHeight;
-    const widthInPdf = pdfWidth;
-    let heightInPdf = widthInPdf / ratio;
-    
-    let position = 0;
-    
-    if (heightInPdf > pdfHeight) {
-      pdf.addImage(imgData, 'PNG', 0, position, widthInPdf, heightInPdf);
-      heightInPdf -= pdfHeight;
-      while(heightInPdf > 0) {
-        position = position - pdfHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, widthInPdf, heightInPdf);
-        heightInPdf -= pdfHeight;
       }
-    } else {
-        pdf.addImage(imgData, 'PNG', 0, 0, widthInPdf, heightInPdf);
-    }
 
-    pdf.save(`Resume-${resumeData.personalInfo.name.replace(' ', '-')}.pdf`);
-    
-    setIsDownloading(false);
+      const imgData = canvas.toDataURL('image/png', 1.0); // Maximum quality
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = imgWidth / imgHeight;
+      
+      // Calculate dimensions to fit the page with margins
+      const margin = 5; // 5mm margin on all sides
+      const contentWidth = pdfWidth - (margin * 2);
+      const contentHeight = pdfHeight - (margin * 2);
+      
+      // Scale to fit width, maintain aspect ratio
+      let imgWidthInPdf = contentWidth;
+      let imgHeightInPdf = imgWidthInPdf / ratio;
+      
+      // If image is taller than one page, split across multiple pages
+      if (imgHeightInPdf > contentHeight) {
+        const totalPages = Math.ceil(imgHeightInPdf / contentHeight);
+        const sourcePageHeight = imgHeight / totalPages;
+        const pageHeightInPdf = imgHeightInPdf / totalPages;
+        
+        for (let i = 0; i < totalPages; i++) {
+          if (i > 0) {
+            pdf.addPage();
+          }
+          
+          // Calculate source y position
+          const sourceY = sourcePageHeight * i;
+          
+          // Create a canvas for this page slice
+          const pageCanvas = document.createElement('canvas');
+          pageCanvas.width = imgWidth;
+          pageCanvas.height = Math.ceil(sourcePageHeight);
+          const ctx = pageCanvas.getContext('2d');
+          
+          if (ctx) {
+            // Fill with white background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+            
+            // Draw the slice
+            ctx.drawImage(
+              canvas,
+              0, sourceY, imgWidth, sourcePageHeight,
+              0, 0, imgWidth, sourcePageHeight
+            );
+            
+            const pageImgData = pageCanvas.toDataURL('image/png', 1.0);
+            pdf.addImage(pageImgData, 'PNG', margin, margin, imgWidthInPdf, pageHeightInPdf);
+          }
+        }
+      } else {
+        // Image fits on one page
+        pdf.addImage(imgData, 'PNG', margin, margin, imgWidthInPdf, imgHeightInPdf);
+      }
+
+      const fileName = `Resume-${resumeData.personalInfo.name.replace(/\s+/g, '-')}.pdf`;
+      pdf.save(fileName);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        variant: "destructive",
+        title: "PDF Generation Failed",
+        description: "Could not generate PDF. Please try again.",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const templates: { [key in TemplateKey]: React.ComponentType<{ data: ResumeData }> } = {

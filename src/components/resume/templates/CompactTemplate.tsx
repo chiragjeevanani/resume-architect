@@ -16,7 +16,7 @@ const CompactTemplate = ({ data }: { data: ResumeData }) => {
   const { personalInfo, summary, experience, education, skills, projects } = data;
 
   return (
-    <Card className="w-full max-w-[8.5in] min-h-[11in] mx-auto shadow-2xl bg-background font-sans">
+    <Card className="w-full max-w-[8.5in] min-h-[11in] mx-auto shadow-2xl bg-background font-sans border-0">
       <CardContent className="p-6 sm:p-8 text-foreground text-[10pt] leading-snug">
         <header className="text-center mb-4">
           <h1 className="text-3xl font-bold text-primary tracking-tight">{personalInfo.name}</h1>
@@ -38,9 +38,11 @@ const CompactTemplate = ({ data }: { data: ResumeData }) => {
 
           {skills?.length > 0 && (
              <ResumeSection title="Core Competencies">
-                <p className="font-medium">
-                    {skills.join(' | ')}
-                </p>
+                <ul className="list-none space-y-1">
+                    {skills.map((skill, index) => (
+                        <li key={index} className="text-sm font-body">{skill}</li>
+                    ))}
+                </ul>
             </ResumeSection>
           )}
 

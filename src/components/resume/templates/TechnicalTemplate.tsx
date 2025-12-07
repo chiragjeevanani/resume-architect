@@ -2,7 +2,6 @@
 
 import type { ResumeData } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { ContactIcons } from '@/components/resume/icons';
 
 const ResumeSection: React.FC<{ title: string; children: React.ReactNode; className?: string }> = ({ title, children, className }) => (
@@ -17,7 +16,7 @@ const TechnicalTemplate = ({ data }: { data: ResumeData }) => {
   const { personalInfo, summary, experience, education, skills, projects } = data;
 
   return (
-    <Card className="w-full max-w-[8.5in] min-h-[11in] mx-auto shadow-2xl bg-background font-code">
+    <Card className="w-full max-w-[8.5in] min-h-[11in] mx-auto shadow-2xl bg-background font-code border-0">
       <CardContent className="p-8 text-foreground text-sm">
         <header className="mb-6">
           <h1 className="text-3xl font-bold text-primary">{`> ${personalInfo.name}`}</h1>
@@ -39,11 +38,11 @@ const TechnicalTemplate = ({ data }: { data: ResumeData }) => {
 
           {skills?.length > 0 && (
             <ResumeSection title="Skills">
-              <div className="flex flex-wrap gap-2">
+              <ul className="list-none space-y-1">
                 {skills.map((skill, index) => (
-                  <Badge key={index} variant="default" className="font-code">{skill}</Badge>
+                  <li key={index} className="text-sm font-body">{skill}</li>
                 ))}
-              </div>
+              </ul>
             </ResumeSection>
           )}
 

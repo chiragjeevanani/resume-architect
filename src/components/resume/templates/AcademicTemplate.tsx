@@ -19,7 +19,7 @@ const AcademicTemplate = ({ data }: { data: ResumeData }) => {
   const professionalExperience = experience.filter(exp => exp.company.toLowerCase() !== 'publication');
 
   return (
-    <Card className="w-full max-w-[8.5in] min-h-[11in] mx-auto shadow-2xl bg-background font-serif">
+    <Card className="w-full max-w-[8.5in] min-h-[11in] mx-auto shadow-2xl bg-background font-serif border-0">
       <CardContent className="p-10 text-foreground text-sm leading-relaxed">
         <header className="text-center mb-8">
           <h1 className="text-3xl font-bold text-primary">{personalInfo.name}</h1>
@@ -95,7 +95,11 @@ const AcademicTemplate = ({ data }: { data: ResumeData }) => {
 
           {skills?.length > 0 && (
             <ResumeSection title="Skills">
-                <p>{skills.join(', ')}</p>
+                <ul className="list-none space-y-1">
+                    {skills.map((skill, index) => (
+                        <li key={index} className="text-sm font-body">{skill}</li>
+                    ))}
+                </ul>
             </ResumeSection>
           )}
 

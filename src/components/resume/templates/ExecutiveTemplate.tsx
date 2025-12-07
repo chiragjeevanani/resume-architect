@@ -18,7 +18,7 @@ const ExecutiveTemplate = ({ data }: { data: ResumeData }) => {
   const { personalInfo, summary, experience, education, skills, projects } = data;
 
   return (
-    <Card className="w-full max-w-[8.5in] min-h-[11in] mx-auto shadow-2xl bg-background">
+    <Card className="w-full max-w-[8.5in] min-h-[11in] mx-auto shadow-2xl bg-background border-0">
       <CardContent className="p-10 text-foreground text-[11pt] leading-relaxed">
         <header className="mb-8 text-center">
           <h1 className="font-headline text-5xl font-extrabold text-primary tracking-tight">{personalInfo.name}</h1>

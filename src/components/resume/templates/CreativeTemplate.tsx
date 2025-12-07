@@ -2,14 +2,13 @@
 
 import type { ResumeData } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { ContactIcons } from '@/components/resume/icons';
 
 const CreativeTemplate = ({ data }: { data: ResumeData }) => {
   const { personalInfo, summary, experience, education, skills, projects } = data;
 
   return (
-    <Card className="w-full max-w-[8.5in] min-h-[11in] mx-auto shadow-2xl bg-background font-serif">
+    <Card className="w-full max-w-[8.5in] min-h-[11in] mx-auto shadow-2xl bg-background font-serif border-0">
       <CardContent className="p-10 text-foreground">
         <header className="relative text-center mb-8 pb-4 border-b-4 border-primary">
           <h1 className="text-5xl font-bold text-primary tracking-wider">{personalInfo.name}</h1>
@@ -67,11 +66,11 @@ const CreativeTemplate = ({ data }: { data: ResumeData }) => {
             {skills?.length > 0 && (
               <section>
                 <h3 className="font-headline text-2xl font-bold text-primary mb-4 text-center">Skills</h3>
-                <div className="flex flex-wrap gap-2 justify-center">
+                <ul className="list-none space-y-1">
                   {skills.map((skill, index) => (
-                    <Badge key={index} variant="outline" className="text-sm">{skill}</Badge>
+                    <li key={index} className="text-sm font-body text-center">{skill}</li>
                   ))}
-                </div>
+                </ul>
               </section>
             )}
           </div>

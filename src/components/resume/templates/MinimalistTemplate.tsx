@@ -15,7 +15,7 @@ const MinimalistTemplate = ({ data }: { data: ResumeData }) => {
   const { personalInfo, summary, experience, education, skills, projects } = data;
 
   return (
-    <Card className="w-full max-w-[8.5in] min-h-[11in] mx-auto shadow-2xl bg-background">
+    <Card className="w-full max-w-[8.5in] min-h-[11in] mx-auto shadow-2xl bg-background border-0">
       <CardContent className="p-12 text-foreground text-sm leading-normal">
         <header className="mb-10">
           <h1 className="text-4xl font-light tracking-tight text-primary">{personalInfo.name}</h1>
