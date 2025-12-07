@@ -10,10 +10,14 @@ import html2canvas from 'html2canvas';
 import type { ResumeData } from '@/lib/types';
 import { initialData } from '@/lib/initial-data';
 import ResumeForm from '@/components/resume/ResumeForm';
-import ResumePreview from '@/components/resume/ResumePreview';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import ClassicTemplate from '@/components/resume/templates/ClassicTemplate';
+import ModernTemplate from '@/components/resume/templates/ModernTemplate';
+import CompactTemplate from '@/components/resume/templates/CompactTemplate';
 
 const resumeSchema = z.object({
   personalInfo: z.object({
@@ -50,8 +54,11 @@ const resumeSchema = z.object({
   })),
 });
 
+type TemplateKey = 'classic' | 'modern' | 'compact';
+
 export default function Home() {
   const [resumeData, setResumeData] = useState<ResumeData>(initialData);
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateKey>('classic');
   const previewRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -67,13 +74,12 @@ export default function Home() {
     setIsDownloading(true);
 
     const canvas = await html2canvas(element, {
-      scale: 3, // Higher scale for better quality
+      scale: 3, 
       useCORS: true, 
       logging: false,
     });
 
     const imgData = canvas.toDataURL('image/png');
-    // A4 dimensions in mm: 210 x 297
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
@@ -81,15 +87,35 @@ export default function Home() {
     const canvasHeight = canvas.height;
     const ratio = canvasWidth / canvasHeight;
     const widthInPdf = pdfWidth;
-    const heightInPdf = widthInPdf / ratio;
+    let heightInPdf = widthInPdf / ratio;
     
-    // If the content is taller than one page, we might need to split it,
-    // for this single-page resume, we assume it fits.
-    pdf.addImage(imgData, 'PNG', 0, 0, widthInPdf, heightInPdf);
+    let position = 0;
+    
+    if (heightInPdf > pdfHeight) {
+      pdf.addImage(imgData, 'PNG', 0, position, widthInPdf, heightInPdf);
+      heightInPdf -= pdfHeight;
+      while(heightInPdf > 0) {
+        position = position - pdfHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, widthInPdf, heightInPdf);
+        heightInPdf -= pdfHeight;
+      }
+    } else {
+        pdf.addImage(imgData, 'PNG', 0, 0, widthInPdf, heightInPdf);
+    }
+
     pdf.save(`Resume-${resumeData.personalInfo.name.replace(' ', '-')}.pdf`);
     
     setIsDownloading(false);
   };
+
+  const templates: { [key in TemplateKey]: React.ComponentType<{ data: ResumeData }> } = {
+    classic: ClassicTemplate,
+    modern: ModernTemplate,
+    compact: CompactTemplate,
+  };
+
+  const SelectedResume = templates[selectedTemplate];
 
   return (
     <main className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
@@ -104,7 +130,23 @@ export default function Home() {
       </ScrollArea>
 
       <div className="bg-muted/50 p-4 md:p-8 flex flex-col items-center justify-start lg:h-screen">
-        <div className="w-full flex justify-end items-center mb-4 sticky top-4 z-10">
+        <div className="w-full flex justify-between items-center mb-4 sticky top-4 z-10 gap-4">
+            <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border">
+                <RadioGroup defaultValue="classic" onValueChange={(value: string) => setSelectedTemplate(value as TemplateKey)} className="flex items-center gap-4">
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="classic" id="t-classic" />
+                        <Label htmlFor="t-classic">Classic</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="modern" id="t-modern" />
+                        <Label htmlFor="t-modern">Modern</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="compact" id="t-compact" />
+                        <Label htmlFor="t-compact">Compact</Label>
+                    </div>
+                </RadioGroup>
+            </div>
           <Button onClick={handleDownloadPdf} disabled={isDownloading}>
             {isDownloading ? (
               <>
@@ -121,7 +163,7 @@ export default function Home() {
         </div>
         <ScrollArea className="w-full h-full">
             <div ref={previewRef} className="w-full">
-              <ResumePreview data={resumeData} />
+              <SelectedResume data={resumeData} />
             </div>
         </ScrollArea>
       </div>
