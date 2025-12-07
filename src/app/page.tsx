@@ -11,13 +11,15 @@ import type { ResumeData } from '@/lib/types';
 import { initialData } from '@/lib/initial-data';
 import ResumeForm from '@/components/resume/ResumeForm';
 import { Button } from '@/components/ui/button';
-import { Download, Loader2 } from 'lucide-react';
+import { Download, Loader2, Palette } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import ClassicTemplate from '@/components/resume/templates/ClassicTemplate';
 import ModernTemplate from '@/components/resume/templates/ModernTemplate';
 import CompactTemplate from '@/components/resume/templates/CompactTemplate';
+import ColorPicker from '@/components/ColorPicker';
+import { useTheme } from '@/components/theme-provider';
 
 const resumeSchema = z.object({
   personalInfo: z.object({
@@ -61,6 +63,7 @@ export default function Home() {
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateKey>('classic');
   const previewRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const { theme } = useTheme();
 
   const form = useForm<ResumeData>({
     resolver: zodResolver(resumeSchema),
@@ -73,11 +76,24 @@ export default function Home() {
     
     setIsDownloading(true);
 
+    // Temporarily set theme to light for PDF generation for consistency
+    const originalTheme = document.documentElement.getAttribute('data-theme');
+    document.documentElement.setAttribute('data-theme', 'default');
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+
     const canvas = await html2canvas(element, {
       scale: 3, 
       useCORS: true, 
       logging: false,
+      backgroundColor: null,
     });
+
+    if(originalTheme) {
+        document.documentElement.setAttribute('data-theme', originalTheme);
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+    }
 
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
@@ -122,7 +138,7 @@ export default function Home() {
       <ScrollArea className="h-screen">
         <div className="p-4 md:p-8">
           <header className="mb-8">
-            <h1 className="font-headline text-4xl font-bold text-primary">Resume Architect</h1>
+            <h1 className="font-headline text-4xl font-bold text-primary">Resume Architect by Chirag</h1>
             <p className="text-muted-foreground mt-2">Fill in your details to build your professional resume.</p>
           </header>
           <ResumeForm form={form} setResumeData={setResumeData} />
@@ -131,21 +147,27 @@ export default function Home() {
 
       <div className="bg-muted/50 p-4 md:p-8 flex flex-col items-center justify-start lg:h-screen">
         <div className="w-full flex justify-between items-center mb-4 sticky top-4 z-10 gap-4">
-            <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border">
-                <RadioGroup defaultValue="classic" onValueChange={(value: string) => setSelectedTemplate(value as TemplateKey)} className="flex items-center gap-4">
-                    <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="classic" id="t-classic" />
-                        <Label htmlFor="t-classic">Classic</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="modern" id="t-modern" />
-                        <Label htmlFor="t-modern">Modern</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="compact" id="t-compact" />
-                        <Label htmlFor="t-compact">Compact</Label>
-                    </div>
-                </RadioGroup>
+            <div className="flex gap-2">
+                <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border flex items-center gap-2">
+                    <Palette className="h-4 w-4 text-muted-foreground" />
+                    <ColorPicker />
+                </div>
+                <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border">
+                    <RadioGroup defaultValue="classic" onValueChange={(value: string) => setSelectedTemplate(value as TemplateKey)} className="flex items-center gap-4">
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="classic" id="t-classic" />
+                            <Label htmlFor="t-classic">Classic</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="modern" id="t-modern" />
+                            <Label htmlFor="t-modern">Modern</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="compact" id="t-compact" />
+                            <Label htmlFor="t-compact">Compact</Label>
+                        </div>
+                    </RadioGroup>
+                </div>
             </div>
           <Button onClick={handleDownloadPdf} disabled={isDownloading}>
             {isDownloading ? (
@@ -162,7 +184,7 @@ export default function Home() {
           </Button>
         </div>
         <ScrollArea className="w-full h-full">
-            <div ref={previewRef} className="w-full">
+            <div ref={previewRef} className="w-full" data-theme={theme}>
               <SelectedResume data={resumeData} />
             </div>
         </ScrollArea>
