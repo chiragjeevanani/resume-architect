@@ -11,9 +11,8 @@ import type { ResumeData } from '@/lib/types';
 import { initialData } from '@/lib/initial-data';
 import ResumeForm from '@/components/resume/ResumeForm';
 import { Button } from '@/components/ui/button';
-import { Download, Loader2, Palette, Sparkles } from 'lucide-react';
+import { Download, Loader2, Palette, Sparkles, ChevronDown } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import ClassicTemplate from '@/components/resume/templates/ClassicTemplate';
 import ModernTemplate from '@/components/resume/templates/ModernTemplate';
@@ -30,6 +29,12 @@ import { useTheme } from '@/components/theme-provider';
 import { tailorResume } from '@/ai/flows/tailor-resume-flow';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const resumeSchema = z.object({
   personalInfo: z.object({
@@ -67,6 +72,19 @@ const resumeSchema = z.object({
 });
 
 type TemplateKey = 'classic' | 'modern' | 'compact' | 'creative' | 'technical' | 'minimalist' | 'professional' | 'academic' | 'executive' | 'two-column';
+
+const templateLabels: Record<TemplateKey, string> = {
+    classic: 'Classic',
+    modern: 'Modern',
+    compact: 'Compact',
+    creative: 'Creative',
+    technical: 'Technical',
+    minimalist: 'Minimalist',
+    professional: 'Professional',
+    academic: 'Academic',
+    executive: 'Executive',
+    'two-column': 'Two Column',
+};
 
 export default function Home() {
   const [resumeData, setResumeData] = useState<ResumeData>(initialData);
@@ -240,57 +258,27 @@ export default function Home() {
 
       <div className="bg-muted/50 p-4 md:p-8 flex flex-col items-center justify-start lg:h-screen">
         <div className="w-full flex justify-between items-start mb-4 sticky top-4 z-10 gap-4">
-            <div className="flex flex-col gap-2">
-                <div className="flex gap-2">
-                    <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border flex items-center gap-2">
-                        <Palette className="h-4 w-4 text-muted-foreground" />
-                        <ColorPicker />
-                    </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+                <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border flex items-center gap-2">
+                    <Palette className="h-4 w-4 text-muted-foreground" />
+                    <ColorPicker />
                 </div>
                 <div className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border">
-                    <RadioGroup defaultValue="classic" onValueChange={(value: string) => setSelectedTemplate(value as TemplateKey)} className="flex items-center flex-wrap gap-x-4 gap-y-2">
-                        <Label>Templates:</Label>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="classic" id="t-classic" />
-                            <Label htmlFor="t-classic">Classic</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="modern" id="t-modern" />
-                            <Label htmlFor="t-modern">Modern</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="compact" id="t-compact" />
-                            <Label htmlFor="t-compact">Compact</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="creative" id="t-creative" />
-                            <Label htmlFor="t-creative">Creative</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="technical" id="t-technical" />
-                            <Label htmlFor="t-technical">Technical</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="minimalist" id="t-minimalist" />
-                            <Label htmlFor="t-minimalist">Minimalist</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="professional" id="t-professional" />
-                            <Label htmlFor="t-professional">Professional</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="academic" id="t-academic" />
-                            <Label htmlFor="t-academic">Academic</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="executive" id="t-executive" />
-                            <Label htmlFor="t-executive">Executive</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="two-column" id="t-two-column" />
-                            <Label htmlFor="t-two-column">Two Column</Label>
-                        </div>
-                    </RadioGroup>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="w-full sm:w-[150px] justify-between">
+                                {templateLabels[selectedTemplate]}
+                                <ChevronDown className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-full sm:w-[150px]">
+                            {Object.entries(templateLabels).map(([key, label]) => (
+                                <DropdownMenuItem key={key} onSelect={() => setSelectedTemplate(key as TemplateKey)}>
+                                    {label}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
           <Button onClick={handleDownloadPdf} disabled={isDownloading}>
